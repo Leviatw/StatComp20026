@@ -279,7 +279,7 @@ $$
 
 $\quad$
 
-**Solution.**
+### Solution
 
 $$
 \int_{0}^{\pi / 3} \sin t d t = \frac{\pi}{3} \mathbb{E}\sin(X),\quad X\sim U(0,\pi/3)
@@ -315,7 +315,7 @@ $$
 
 $\quad$
 
-**Solution. **
+### Solution
 
 For the clarity, it is necessary to recall the content in Exercise $5.6$. 
 
@@ -436,7 +436,7 @@ $$\operatorname{Var}\left(c \hat{\theta}_{1}+(1-c) \hat{\theta}_{2}\right)=\oper
 
 $\quad$
 
-**Solution. **
+### Solution.
 
 Define $f(c) = \operatorname{Var}\left(c \hat{\theta}_{1}+(1-c) \hat{\theta}_{2}\right)$.
 

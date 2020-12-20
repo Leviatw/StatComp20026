@@ -8,8 +8,7 @@ knitr::opts_chunk$set(
 library(StatComp20026)
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  devtools::install_github("Leviatw/StatComp20026",
-#                           build_vignettes = TRUE, force=TRUE)
+#  devtools::install_github("Leviatw/StatComp20026")
 
 ## ----pressure, echo=FALSE, fig.cap="SICAs", out.width = '50%'-----------------
 knitr::include_graphics("SICAs.png")
