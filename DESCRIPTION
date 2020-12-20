@@ -1,0 +1,32 @@
+Package: StatComp20026
+Type: Package
+Title:  'Statistical Computing' course project
+Version: 1.0
+Date: 2020-12-20
+Author: Tingnan Gong
+Maintainer: Tingnan Gong <twgtn@mail.ustc.edu.cn>
+Description: Homework of Tingnan Gong are included. Also several functions useful for model selection are included.
+License: GPL (>= 2)
+Imports: 
+    Rcpp,
+    microbenchmark,
+    knitr,
+    rmarkdown,
+    ggplot2,
+    boot,
+    bootstrap,
+    DAAG,
+    RANN,
+    energy,
+    Ball,
+    kableExtra,
+    MASS,
+    glmnet
+LinkingTo: Rcpp
+RoxygenNote: 7.1.1
+Encoding: UTF-8
+VignetteBuilder: knitr
+URL: http://github.com/Leviatw/StatComp20026
+BugReports: http://github.com/Leviatw/StatComp20026/BugReports
+Depends: 
+    R (>= 2.10)

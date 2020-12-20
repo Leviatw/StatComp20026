@@ -1,0 +1,302 @@
+---
+title: "Several Useful Functions for Model Selection"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Several Useful Functions for Model Selection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: ref.bib
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, echo=FALSE}
+library(StatComp20026)
+```
+
+# Introduction
+
+**StatComp20026** is a package designed in the course **Statistical Computing** in University of Science and Technology of China, advised by Prof. Hong Zhang and assisted by Ph.D. Anran Liu. 
+
+The current vignette is written to explain the usage of several functions which are developed by Li Chen and Tingnan Gong in the course project of **Linear Statistical Regression** advised by Prof. Zemin Zheng. 
+
+To see all the homework of the course **Statistical Computing**, please refer to vignette **homework**. 
+
+The functions here are able to partly retrieve the implementation results in [@lv2009unified]. Detailedly speaking, the functions here are developed to solve **model selection** problems with the trick named LLA. The penalty in the regularized object function, which needs minimizing, can be chosen from *SICA*, *SCAP* and *MCP*. 
+
+# Installation
+
+A straight way to obtain the`StatComp20026` is to install it from github. Type the command below in R console, 
+
+```{r, eval=FALSE}
+devtools::install_github("Leviatw/StatComp20026", 
+                         build_vignettes = TRUE, force=TRUE)
+```
+
+For more details, see `help(install.packages)`.
+
+# Model Selection 
+
+For model selection problem, people commonly consider a linear regression model as 
+
+$$
+y = X\beta + \epsilon.
+$$
+To solve the unknown $\beta$, which is of interests, people commonly tend to minimize the object function below 
+
+\begin{equation}\label{model selection with p}
+    \min _{\boldsymbol{\beta} \in \mathbb{R}^{p}} \frac{1}{2}\|\mathbf{y}-\mathbf{X} \boldsymbol{\beta}\|_{2}^{2}+\Lambda_{n} \sum_{j=1}^{p} p_{\lambda_{n}}\left(\left|\beta_{j}\right|\right).
+\end{equation}
+
+where $\Lambda_{n} \in(0, \infty)$ is a scale parameter, $p_{\lambda_{n}}(\cdot)$ is a penalty function with regularization parameter $\lambda_{n} \in[0, \infty)$.
+
+Another equivalent expression of penalty is $\rho(t)=\rho(t ; \lambda)=\lambda^{-1} p_{\lambda}(t)$ for $t \in[0, \infty), \lambda \in(0, \infty)$.
+
+
+# Penalties and LLA Methods
+
+Recall the penalty $p_\lambda(\cdot)$, in our setting, the penalty can be chosen from SICA, SCAD or MCP. These three penalties will be briefly introduced in the following.
+
+## SICA
+
+SICA is the abbreviation of *Smooth Integration of counting and absolute deviation*, which is a penalty raised in [@lv2009unified] to handle curse of dimentionality and study with sparse recovery problem and model selection problem under a unified frame. 
+
+SICA's definition is given by the following formula.
+
+\begin{equation}
+  \rho_{a}(t)=\left\{
+    \begin{array}{ll}
+      \frac{(a+1) t}{a+t}=\left(\frac{t}{a+t}\right)
+      I(t \neq 0)+\left(\frac{a}{a+t}\right) t, &         a\in(0, \infty) \\
+      I(t \neq 0), & a=0 \\
+      t, & a=\infty
+    \end{array}\right.
+\end{equation}
+
+In the following we provide a sketch map for users to get a more intuitive understanding on SICAs. 
+
+```{r pressure, echo=FALSE, fig.cap="SICAs", out.width = '50%'}
+knitr::include_graphics("SICAs.png")
+```
+
+## SCAD
+
+SCAD is the abbreviation of *smoothly clipped absolute deviation*, which is a classical penalty firstly raised in [@fan2001variable]. 
+
+It is nice since it results in the estimators with **sparsity**, **unbiasedness** and **continuity**. 
+
+In [@fan2001variable], they define SCAD by 
+
+\begin{equation}
+p_{\lambda}^{\prime}(t)=\lambda\left\{I(t \leq \lambda)+\frac{(a \lambda-t)_{+}}{(a-1) \lambda} I(t>\lambda)\right\},
+\end{equation}
+
+where $a>2$.
+
+## MCP
+
+MCP is the abbreviation of *minimax concave penalty*, which is also a classical penalty firstly raised in [@zhang2007penalized]. 
+
+Its implementation performance in our setting is weaker than the other classical penalties due to some unknown reason. But it also results in the estimators with three nice properties mentioned above, which means it is useful facing many other problems.
+
+In [@zhang2007penalized], they define MCP by 
+
+\begin{equation}
+    p_{\lambda}^{\prime}(t)=(a \lambda-t)_{+} / a
+\end{equation}
+
+where $a\geq 1$.
+
+## LLA 
+
+Before the formal implementation, we firstly give a glance at local linear approximation (LLA) methods, which is powerful to turn a general regularized least square problem into an adaptive lasso problem. 
+
+  For the penalty in the object function, namely $\sum_{j=1}^{p} p_{\lambda_n}\left(\left|\beta_{j}\right|\right)$, a naive but efficient idea is to approximate it by a first-order expansion
+$$
+\sum_{j=1}^{p}\left[p_{\lambda_n}\left(\left|\beta_{j}^{(0)}\right|\right)+p_{\lambda_n}^{\prime}\left(\left|\beta_{j}^{(0)}\right|\right)\left(\left|\beta_{j}\right|-\left|\beta_{j}^{(0)}\right|\right)\right].
+$$
+LLA is based on the approximation and solves the weighted lasso in one-step
+$$
+\min _{\boldsymbol{\beta} \in \mathbb{R}^{p}} \frac{1}{2}\|\mathbf{y}-\mathbf{X} \boldsymbol{\beta}\|_{2}^{2}+\Lambda_{n} \lambda_{n} \sum_{j=1}^{p} w_{j}\left|\beta_{j}\right|
+$$
+where $w_{j}=\rho_{a}^{\prime}\left(\left|\beta_{j}^{(0)}\right|\right)=a(a+1) /\left(a+\left|\beta_{j}^{(0)}\right|\right)^{2}, j=1, \ldots, p$.
+
+# Problem setting 
+
+We provides examples showing the usage of our functions on solving model selection problems equipped with different penalties. We will use data generated based on the linear regression model. 
+
+Recall the form of a linear regression model, 
+
+$$
+y_{n \times 1} = X_{n \times p}\beta_{p \times 1} + \epsilon_{n\times 1}.
+$$
+
+Each row of $X$ is an i.i.d. $p$-dimensional random sample from $N(0, \Sigma_0)$ with 
+
+$$
+\Sigma_0 = \left[r^{|i-j|}\right]_{(i,j)\in\{1,2,\ldots,p\}^2}\in\mathbb{R}_{p \times p}.
+$$
+
+Hereafter we fix $r = 0.5$. 
+
+The noise vector $\epsilon$ is generated from $N(0, \sigma^2I_n)$ where $\sigma$ will be set to be $0.3$ and $0.5$ respectively. 
+
+In each training of the model, we let $(n,p) = (100, 50)$ and we will simulate for $100$ times in order to estimate the following three standards. 
+
+ - Prediction Error (PE): $E(y-x^\top\hat{\beta})^2$ where $x$ is an independent random sample from $N(0, \Sigma_0)$ in the test set and $\hat{\beta}$ is the estimate of $\beta_0$. 
+ - $#S$: The number of selected variables in the final model. 
+ - False Negative (FN): The number of missed true variables. 
+
+In the test setting, the sample size is $10000$. 
+
+The true $\beta$, which is denoted as $\beta_0$ hereafter, is set as 
+
+$$
+\beta_{0, \mathfrak{M}_0} = (1.00, -0.50, 0.70, -1.20, -0.90, 0.30, 0.55)^\top,
+$$
+
+where $\mathfrak{M}_0$ means the support set of $\beta_0$ and naturally the parameters on $\mathfrak{M}_0^c$ are all $0$. 
+
+
+```{r}
+# Problem setting initialization
+n <- 100; p<- 50; s <- 7; r <- 0.5; sigma1 <- 0.3; sigma2 <- 0.5
+beta <- c(1,-0.5,0.7,-1.2,-0.9,0.3,0.55)
+sim_times <- 100
+```
+
+# Quick Start with SCAD
+
+In this section, users can get a quick start with SCAD. Users will have a brief expression on the important functions in the package `StatComp20026`.  
+
+Before everything starts, `library` our package.
+
+```{r, eval=FALSE}
+library(StatComp20026)
+```
+
+
+Firstly we generate the training data and testing data which will also be used in the complete example with SICA. We will clearly see the usage of function `ms_data_gen` in the following chunk. 
+
+```{r}
+# Training data and testing data for sigma = 0.3
+test1_data <- ms_data_gen(s,10000,p,r,beta,sigma1)
+test1_X <- test1_data[[1]]
+test1_y <- test1_data[[2]]
+
+train1_data <- ms_data_gen(s,n*sim_times,p,r,beta,sigma1)
+train1_X <- train1_data[[1]]
+train1_y <- train1_data[[2]]
+```
+
+ - Function `ms_data_gen` helps users to generate data fitting to the problem setting above.
+ - `s` is a vector which represents the support set of $\beta_0$. 
+ - `n` is the sample size.
+ - `p` is the dimension of $\beta_0$. 
+ - `r` is the correlation parameter in $\Sigma_0$.
+ - `beta` is commonly $\beta_0$.
+ - `sigma` is the deviation of noise.  
+
+After having the data, users can set a sequence of candidate parameters $a$ and $\lambda$. By cross validation methods, which is incorporated in function `ms_cv`, users can pick out the optimal $a$ and $\lambda$ in the least mean square error sense. 
+
+```{r}
+# Initialize the sequence of a and lambda
+seq_a <- c(7,9,11)
+seq_lambda <- c(0.13,0.15,0.17)
+
+# Penalty type
+pentype = "SCAD"
+
+# Training set for one simulation
+X <- train1_X[1:100,]
+y <- train1_y[1:100,]
+
+# Optimal a and lambda
+op_par <- ms_cv(X, y, pentype, seq_a, seq_lambda)
+knitr::kable(data.frame(t(op_par)), 
+             col.names = c("a", "$\\lambda$"), 
+             caption = "Parameters from CV")
+```
+
+From the above, we can see that the implementation of function `ms_cv` is rather simple. Users only need to set basic `arguments` correctly and the detail of cross validation will be covered by `ms_cs`.
+
+ - `X` is the design matrix belonging to $\mathbb{R}_{n\times p}$.
+ - `y` is the responsors belonging to $\mathbb{R}_{n\times 1}$.
+ - `pentype` is the type of penalty. 
+ - `seq_a` is a vector of $a$ from which users pick the optimal $a$. 
+ - `seq_lambda` is a vector of $\lambda$ from which users pick the optimal $\lambda$. 
+ 
+After users possess optimal parameters in corresponding penalties, they are ready to solve the regularized least square problem. `lla` function is developed to solve RLS problem using LLA which turn the problem into a adaptive lasso regularized one. 
+
+```{r}
+beta_hat <- lla(X, y, pentype, a = op_par[[1]], lambda = op_par[[2]])
+```
+
+In `lla` function, we do not repeatedly explain `X`, `y` and `pentype`. 
+
+ - `a` is manually chosen $a$. We suggest users to choose the optimal one chosen by `ms_cv`.
+ - `lambda` is manually chosen $\lambda$. We suggest users to choose the optimal one chosen by `ms_cv`.
+
+# A Complete Example with SICA
+
+The case where $\sigma = 0.3$ is described below meanwhile the case where $\sigma = 0.5$ is omitted since their implementation are internally the same. 
+
+```{r, eval=FALSE}
+# Initialize the sequence of a and lambda
+seq_a <- c(0.13, 0.15, 0.17)
+seq_lambda <- c(0.11, 0.13, 0.15)
+
+# Penalty type
+pentype <- "SICA"
+
+# Initialize the results containing PE, #S and FN
+PE_sica_1 <- rep(0, sim_times)
+S_sica_1 <- rep(0, sim_times)
+FN_sica_1 <- rep(0, sim_times)
+
+# Do 100 times of simulations 
+for (i in 1:sim_times){
+  # Training set in each simulation 
+  X <- train1_X[(sim_times*(i-1)+1):(sim_times*i),]
+  y <- train1_y[(sim_times*(i-1)+1):(sim_times*i),]
+  
+  # Search for optimal a and lambda using cross validation
+  op_res <- ms_cv(X,y,pentype,seq_a,seq_lambda)
+  op_a <- op_res[[1]]
+  op_lambda <- op_res[[2]]
+  
+  # Estimate beta using LLA methods
+  beta_hat <- lla(X,y,pentype,op_a,op_lambda)
+  
+  # Output results
+  S_sica_1[i] <- sum(beta_hat!=0)
+  FN_sica_1[i] <- sum(beta_hat[1:7] == 0)
+  PE_sica_1[i] <- mean((test1_y - test1_X %*% beta_hat) ^2)
+}
+```
+
+```{r, echo=FALSE}
+data(list = c("S_sica_1", "PE_sica_1", "FN_sica_1"))
+```
+
+
+```{r}
+knitr::kable(data.frame(t(c(median(S_sica_1), median(FN_sica_1), round(median(PE_sica_1), 4) )), 
+                        row.names = "Median"), 
+             col.names = c("#S", "FN", "PE"), caption = "Results of example")
+boxplot(S_sica_1, main = "Boxplot of #S with SICA")
+boxplot(PE_sica_1, main = "Boxplot of PE with SICA")
+```
+
+Though analysis of the model selection is not our emphasis, we can still tell from the results that in the case $\sigma = 0.3$ with penalty SICA, the recovery of sparsity and the estimate of $\beta_0$ are both nice according to the **stable #S close to 7** and the **small PE**. 
+
+# References
